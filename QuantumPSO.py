@@ -24,7 +24,11 @@ import argparse
 from NSGA import *
 
 
-
+'''
+1. Sigmoid, Softmax functions
+2. Function of calculating the Sigma value 
+3. Logistic (chaotic) Mapping for generating chaotic sequence
+'''
 def sigmoid(x):
     return 1/(1+np.exp(-x))
 
@@ -68,7 +72,9 @@ def chaotic_logistic(r, x):
     return r*x*(1-x)
 
 
-
+'''
+The class of defining particle properties including the position & fitness updating mechanism for both traditional PSO and Quantum PSO
+'''
 
 class Particle():
     
@@ -129,8 +135,13 @@ class Particle():
             self.pbest = self.position
             
             
-            
-
+'''
+The class of Quantum-PSO including:
+1. Swarm Initialization
+2. Parameter beta - changing with iterations
+3. Swarm Evolution Mechanism including alternative local search operators
+4. Elite Selection Methods
+'''
 
 class QPSO():
     
@@ -208,8 +219,8 @@ class QPSO():
                 swarm[i].fitness_update(Activity_list, Method_list, Task_list, Resource_list, re_cost)
                 # local search
                 # self.Neighbour_search(swarm[i], swarm, archive, current_iter = kwargs['current_iter'], Activity_list = Activity_list, Method_list=Method_list, Task_list=Task_list, Resource_list=Resource_list, re_cost=re_cost)
-                # mutation
                 
+                # Crossover and Mutation
                 if len(archive) > 2:
                     p = random.random()
                     self.Chaotic_mutation(swarm[i], swarm, archive, r = kwargs['r'], Activity_list = Activity_list, Method_list=Method_list, Task_list=Task_list, Resource_list=Resource_list, re_cost=re_cost)
@@ -282,16 +293,14 @@ class QPSO():
             particle.pbest = individual_2.pbest
             particle.pbest_fitness = individual_2.pbest_fitness
             particle.current_fitness = individual_2.current_fitness
-            # swarm.remove(particle)
-            # swarm.append(individual_2)
         else:
-            # self.Poly_mutation(particle)
             if random.random() > 0.5:
                 particle.position = individual_2.position
                 particle.pbest = individual_2.pbest
                 particle.pbest_fitness = individual_2.pbest_fitness
                 particle.current_fitness = individual_2.current_fitness
-                
+    
+    ''' Chaotic Crossover Operator'''
     def Chaotic_mutation(self, particle, swarm, archive, r, **kwargs):
         #generate chaotic variables
         # x = random.random()
@@ -302,9 +311,6 @@ class QPSO():
             if round(chaotic_logistic(r, x),2) not in li:
                 eta = chaotic_logistic(r, x)
                 break
-        # while round(chaotic_logistic(r, x),2) not in li:
-        #     eta = chaotic_logistic(r, x)
-        #     break
         rho = 4*eta*(1-eta)
         # randomly select two individuals from swarm and two from archive
         num_1, num_2 = random.sample([i for i in range(len(swarm))], 2)
@@ -348,7 +354,7 @@ class QPSO():
                 elif particle.position[a][b] > self.upper:
                     particle.position[a][b] = self.upper
    
-    
+    ''' Polynomial mutation operator '''
     def Poly_mutation(self, particle):
         for a in range(self.particle_dim_a):
             for b in range(self.particle_dim_b):
@@ -368,7 +374,7 @@ class QPSO():
             return u, (2*u)**(1/(mutation_param + 1)) - 1
         return u, 1 - (2*(1-u))**(1/(mutation_param + 1))
     
-       
+    ''' Elite Selection (Global best selection) based on Crowding distance and Sigma Value '''
     def leader_select(self, swarm, archive, types, particle=None):
         
         ids = 0
@@ -419,7 +425,7 @@ class QPSO():
 
 
          
-            
+'''Non-dominated Sorting class including finding out pareto optimal set and calculating crowd distance '''        
 
 class Non_dominated_sorting():    
     
@@ -513,9 +519,8 @@ class Non_dominated_sorting():
         return distances.sum(axis=1)/n_fit
         
 
-## schedule generation scheme (SGS)
+## schedule generation scheme (SGS) for proposed problem
            
-
 def SGS(PSL, Activity_list, Method_list, Task_list, Resource_list):
     
     # PSL: priority selection list: [a, b, c, d, a_, b_, c_, d_]: [a,b,c,d] is the priority value; [a_,b_,c_,d_] is the selction
@@ -773,7 +778,7 @@ def evaluation(problem, solution, re_cost, expect_object, size):
 
 
     
-## SAA-Main =======================================================
+## SAA-Main (Sample Average Approximation) =======================================================
 
 def SAA_main(Activity_list, Method_list, Task_list, Resource_list, algorithm, args):
     '''
